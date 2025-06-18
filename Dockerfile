@@ -1,18 +1,27 @@
-FROM arm64v8/python:3.11
+FROM --platform=linux/arm64 python:3.11-slim
 
-RUN apt update && apt install -y \
-    git cmake unzip zip \
-    build-essential python3-dev \
-    wget openjdk-11-jdk curl
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Bazelisk (auto-manages Bazel versions)
-RUN curl -Lo /usr/local/bin/bazel https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-arm64 \
-    && chmod +x /usr/local/bin/bazel
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+  git curl wget unzip zip cmake build-essential protobuf-compiler \
+  openjdk-17-jdk bash
 
-WORKDIR /src
-RUN git clone https://github.com/google/mediapipe.git
-WORKDIR /src/mediapipe
+# Install Bazelisk (Bazel launcher)
+RUN curl -Lo /usr/local/bin/bazel \
+  https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-arm64 && \
+  chmod +x /usr/local/bin/bazel
 
-RUN bazel build -c opt mediapipe/python:mediapipe_py_pb2
+# Set working directory
+WORKDIR /mediapipe
 
+# Clone MediaPipe
+RUN git clone https://github.com/google/mediapipe.git . && \
+    git submodule update --init --recursive
+
+# Preload environment variables (optional)
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-arm64
+
+# Build Python wheel
 RUN python3 setup.py bdist_wheel
