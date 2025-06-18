@@ -1,0 +1,7 @@
+{
+  "name": "mediapipe-linuxarm64-prebuiltwhl",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "docker run --rm --privileged multiarch/qemu-user-static --reset -p yes"
+}
